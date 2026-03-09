@@ -3,21 +3,25 @@
 import React from 'react'   
 import { useParams } from 'next/navigation';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import { Separator } from 'react-resizable-panels';
+import { Separator } from '@/components/ui/separator';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { usePlayground } from '@/features/playground/hooks/usePlayground';
 
 const Page = () => {
   const {id} = useParams<{id: string}>();
+  const {playgroundData, templateData, isLoading, error, saveTemplateData} = usePlayground(id);
+  console.log(templateData);
   return (
     <TooltipProvider>
         <SidebarInset>
-          <header className="px-4 py-2 border-b">
-            <SidebarTrigger className="text-sm font-medium">
-              <Separator orientation="vertical" className="mx-2 h-6 w-px bg-gray-300" />
-              <div className="flex items-center space-x-2">
-                <span>{id}</span>
-              </div>
-            </SidebarTrigger>
+          <header className="px-4 py-2 border-b flex items-center gap-2">
+            <SidebarTrigger />
+            <Separator orientation="vertical" className="h-6" />
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium">
+                {playgroundData?.title || "Code Playground"}
+              </span>
+            </div>
           </header>
         </SidebarInset>
     </TooltipProvider>
