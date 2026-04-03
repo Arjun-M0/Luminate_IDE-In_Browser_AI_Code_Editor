@@ -45,7 +45,10 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { set } from "date-fns";
 import { se } from "date-fns/locale";
-import { NewFileDialog, NewFolderDialog, RenameFileDialog, RenameFolderDialog } from "./template-file-tree";
+import NewFileDialog from "./dialogs/new-file-dialog";
+import NewFolderDialog from "./dialogs/new-folder-dialog";
+import RenameFileDialog from "./dialogs/rename-file-dialog";
+import RenameFolderDialog from "./dialogs/rename-folder-dialog";
 
 
 // Using the provided interfaces
@@ -131,6 +134,7 @@ const TemplateNode = ({
             <SidebarMenuItem
                 onClick={() => onFileSelect?.(file)}
                 style={{ paddingLeft: `${level * 1.5}rem` }}
+
                 className={`group flex cursor-pointer items-center justify-between rounded-md transition-colors ${
                     isSelected
                         ? "bg-sidebar-accent text-sidebar-accent-foreground"

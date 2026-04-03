@@ -1,15 +1,12 @@
 import { create } from "zustand";
+import type { WebContainer } from "@webcontainer/api";
 
 import { toast } from "sonner";
 import { TemplateFile, TemplateFolder } from "../types";
 // import { SaveUpdatedCode } from "../actions";
 import { generateFileId } from "../lib";
 
-type WebContainerInstance = {
-  fs?: {
-    mkdir: (path: string, options?: { recursive?: boolean }) => Promise<void>;
-  };
-};
+type WebContainerInstance = WebContainer;
 
 interface FileExplorerState {
   playgroundId: string;
