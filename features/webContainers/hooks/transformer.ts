@@ -1,10 +1,6 @@
-interface TemplateItem {
-  filename: string;
-  fileExtension: string;
-  content: string;
-  folderName?: string;
-  items?: TemplateItem[];
-}
+import { TemplateFile, TemplateFolder } from "@/features/playground/lib/path-to-json";
+
+type TemplateItem = TemplateFile | TemplateFolder;
 
 interface WebContainerFile {
   file: {
@@ -20,38 +16,42 @@ interface WebContainerDirectory {
 
 type WebContainerFileSystem = Record<string, WebContainerFile | WebContainerDirectory>;
 
-export function transformToWebContainerFormat(template: { folderName: string; items: TemplateItem[] }): WebContainerFileSystem {
+const isTemplateFolder = (item: TemplateItem): item is TemplateFolder => {
+  return "folderName" in item;
+};
+
+const itemToName = (item: TemplateItem): string => {
+  return isTemplateFolder(item)
+    ? item.folderName
+    : `${item.filename}.${item.fileExtension}`;
+};
+
+export function transformToWebContainerFormat(template: TemplateFolder): WebContainerFileSystem {
   function processItem(item: TemplateItem): WebContainerFile | WebContainerDirectory {
-    if (item.folderName && item.items) {
-      // This is a directory
+    if (isTemplateFolder(item)) {
       const directoryContents: WebContainerFileSystem = {};
-      
+
       item.items.forEach(subItem => {
-        const key = subItem.fileExtension 
-          ? `${subItem.filename}.${subItem.fileExtension}`
-          : subItem.folderName!;
+        const key = itemToName(subItem);
         directoryContents[key] = processItem(subItem);
       });
 
       return {
         directory: directoryContents
       };
-    } else {
-      // This is a file
-      return {
-        file: {
-          contents: item.content
-        }
-      };
     }
+
+    return {
+      file: {
+        contents: item.content
+      }
+    };
   }
 
   const result: WebContainerFileSystem = {};
-  
+
   template.items.forEach(item => {
-    const key = item.fileExtension 
-      ? `${item.filename}.${item.fileExtension}`
-      : item.folderName!;
+    const key = itemToName(item);
     result[key] = processItem(item);
   });
 
