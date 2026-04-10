@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import LoadingStep from "@/components/ui/loader";
+import ToggleAI from "@/features/playground/components/toggle-ai";
 import {
   TooltipProvider,
   Tooltip,
@@ -41,6 +42,7 @@ import {
   Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAISuggestions } from "@/features/ai/hooks/useAISuggestions";
 import { Dropdown } from "react-day-picker";
 import { DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useWebContainer } from "@/features/webContainers/hooks/useWebContainer";
@@ -49,8 +51,12 @@ import WebContainerPreview from "@/features/webContainers/components/webcontaine
 const Page = () => {
   const { id } = useParams<{ id: string }>();
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
+  const [previewRefreshToken, setPreviewRefreshToken] = useState(0);
   const { playgroundData, templateData, isLoading, error, saveTemplateData } =
     usePlayground(id);
+
+  const aiSuggestion = useAISuggestions();
+
   const {
     activeFileId,
     closeAllFiles,
@@ -81,6 +87,7 @@ const Page = () => {
   } = useWebContainer({templateData});
 
   const lastSyncedContent = useRef<Map<string, string>>(new Map());
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(()=>{
     setPlaygroundId(id);
@@ -257,6 +264,39 @@ const Page = () => {
     ]
   );
 
+  useEffect(() => {
+    if (!activeFileId || !templateData || !writeFileSync) return;
+
+    const activeOpenFile = openFiles.find((file) => file.id === activeFileId);
+    if (!activeOpenFile) return;
+
+    const filePath = findFilePath(activeOpenFile, templateData);
+    if (!filePath) return;
+
+    const previouslySynced = lastSyncedContent.current.get(activeOpenFile.id);
+    if (previouslySynced === activeOpenFile.content) return;
+
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+
+    syncTimeoutRef.current = setTimeout(async () => {
+      try {
+        await writeFileSync(filePath, activeOpenFile.content);
+        lastSyncedContent.current.set(activeOpenFile.id, activeOpenFile.content);
+        setPreviewRefreshToken((prev) => prev + 1);
+      } catch (syncError) {
+        console.error("Live sync failed:", syncError);
+      }
+    }, 300);
+
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, [activeFileId, openFiles, templateData, writeFileSync]);
+
   React.useEffect(()=>{
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
@@ -374,21 +414,11 @@ const Page = () => {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              {/* <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size={"sm"}
-                      variant="outline"
-                      disabled={!hasUnsavedChanges}
-                      onClick={() => {}}
-                    >
-                      <Bot className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Toggle AI</p>
-                  </TooltipContent>
-                </Tooltip> */}
+             <ToggleAI
+             isEnabled={aiSuggestion.isEnabled}
+             onToggle={aiSuggestion.toggleEnabled}
+             suggestionLoading={aiSuggestion.isLoading}
+             />
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -459,6 +489,12 @@ const Page = () => {
                         activeFile={activeFile}
                         content={activeFile?.content || ""}
                         onContentChange={(value)=> activeFileId && updateFileContent(activeFileId, value)}
+                        suggestion={aiSuggestion.suggestion}
+                        suggestionPosition={aiSuggestion.position}
+                        suggestionLoading={aiSuggestion.isLoading}
+                        onAcceptSuggestion={(editor, monaco) => aiSuggestion.acceptSuggestion(editor, monaco)}
+                        onRejectSuggestion={(editor) => aiSuggestion.rejectSuggestion(editor)}
+                        onTriggerSuggestion={(type , editor) => aiSuggestion.fetchSuggestion(type, editor) }
                       />
                     </ResizablePanel>
 
@@ -474,6 +510,7 @@ const Page = () => {
                                 error={containerError}
                                 writeFileSync={writeFileSync}
                                 serverUrl={serverUrl!}
+                                refreshToken={previewRefreshToken}
                                 forceResetup={false}
                               />
                             </ResizablePanel>

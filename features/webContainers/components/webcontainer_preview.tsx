@@ -16,6 +16,7 @@ interface WebContainerPreviewProps {
   instance: WebContainer | null;
   writeFileSync: (path: string, content: string) => Promise<void>;
   forceResetup?: boolean; // Optional prop to force re-setup
+  refreshToken?: number; // Token to trigger iframe reload
 }
 
 const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
@@ -26,8 +27,10 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
   serverUrl,
   writeFileSync,
   forceResetup = false,
+  refreshToken = 0,
 }) => {
   const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [iframeSrc, setIframeSrc] = useState<string>("");
   const [loadingState, setLoadingState] = useState({
     transforming: false,
     mounting: false,
@@ -60,6 +63,25 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
       });
     }
   }, [forceResetup]);
+
+  // Handle iframe src with refresh token for cache-busting
+  useEffect(() => {
+    if (!previewUrl) {
+      setIframeSrc("");
+      return;
+    }
+
+    if (!refreshToken) {
+      setIframeSrc(previewUrl);
+      return;
+    }
+
+    const [baseUrl, hash = ""] = previewUrl.split("#");
+    const separator = baseUrl.includes("?") ? "&" : "?";
+    const urlWithRefresh = `${baseUrl}${separator}wc_refresh=${refreshToken}`;
+
+    setIframeSrc(hash ? `${urlWithRefresh}#${hash}` : urlWithRefresh);
+  }, [previewUrl, refreshToken]);
 
   useEffect(() => {
     async function setupContainer() {
@@ -341,7 +363,7 @@ const WebContainerPreview: React.FC<WebContainerPreviewProps> = ({
           {/* Preview */}
           <div className="flex-1">
             <iframe
-              src={previewUrl}
+              src={iframeSrc || previewUrl}
               className="w-full h-full border-none"
               title="WebContainer Preview"
             />
