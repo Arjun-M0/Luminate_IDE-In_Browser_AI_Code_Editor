@@ -1,52 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Luminate IDE (In-Browser AI Code Editor)
+Luminate IDE is a cutting-edge, web-based Integrated Development Environment (IDE) that brings the power of full-stack development and local AI directly to your browser. Built with modern web technologies, it features a complete file system, terminal, and intelligent code auto-completion powered by local language models.
 
-## Getting Started
+## ✨ Features
 
-First, run the development server:
+- **In-Browser Execution Environment:** Run full-stack environments locally in your browser using the [WebContainer API](https://webcontainers.io/).
+- **AI-Powered Code Suggestions:** Get intelligent, real-time code auto-completion (ghost text) powered by a local Ollama instance (e.g., Qwen2.5 Coder) as you pause typing.
+- **Advanced Code Editor:** Features the powerful Monaco Editor, providing an authentic VS Code-like editing experience with syntax highlighting, formatting, file exploration, and more.
+- **Integrated Terminal:** Full-featured terminal built with Xterm.js for running shell commands.
+- **Authentication & Database:** Secure user authentication managed with Better Auth and data persistence via Prisma ORM.
+- **Modern UI:** A beautiful, responsive, and customizable user interface built with modern dark-mode features using Tailwind CSS, Radix UI, and Shadcn UI components.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 📸 Screenshots
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+![Luminate Playground](./public/playground.png)
+*Luminate IDE featuring the Monaco Editor, WebContainer terminal, and live application preview.*
 
-## AI Suggestion Timeout Tuning
+## 🛠️ Tech Stack
 
-If AI suggestions time out too quickly, configure these environment variables in `.env.local`:
+- **Framework:** [Next.js 15](https://nextjs.org/) (App Router, React 19)
+- **Editor Core:** [Monaco Editor](https://microsoft.github.io/monaco-editor/)
+- **In-Browser Compute:** [WebContainer API](https://webcontainers.io/)
+- **Terminal:** [Xterm.js](https://xtermjs.org/)
+- **AI Backend:** Local [Ollama](https://ollama.com/) instance
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) & [Shadcn UI](https://ui.shadcn.com/)
+- **Auth & Database:** [Better Auth](https://better-auth.com/) & [Prisma](https://www.prisma.io/)
 
-```bash
-AI_SUGGESTION_TIMEOUT_MS=60000
-NEXT_PUBLIC_AI_SUGGESTION_TIMEOUT_MS=65000
-AI_SUGGESTION_NUM_PREDICT=120
-```
+## 🚀 Getting Started
 
-- `AI_SUGGESTION_TIMEOUT_MS`: server timeout for the Ollama call in `app/api/code-suggestion/route.ts`
-- `NEXT_PUBLIC_AI_SUGGESTION_TIMEOUT_MS`: client timeout for `/api/code-suggestion` requests
-- `AI_SUGGESTION_NUM_PREDICT`: max generated tokens from Ollama (`num_predict`)
+### Prerequisites
 
-Use higher timeout values (for example `90000`) if your local model is slow or cold-starting.
+- Node.js (v20+)
+- npm, yarn, or pnpm
+- A running local instance of [Ollama](https://ollama.com/) with a code generation model installed (e.g., `ollama run qwen2.5-coder:7b`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Installation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Clone the repository:**
+   ```bash
+   git clone <your-repository-url>
+   cd <project-directory>
+   ```
 
-## Learn More
+2. **Install dependencies:**
+   ```bash
+   npm install
+   # or yarn install / pnpm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+3. **Environment Setup:**
+   Create a `.env.local` file in the root directory and configure your environment variables (Database URL, Auth secrets, etc.).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   # Example .env variables
+   DATABASE_URL="your-database-url"
+   BETTER_AUTH_SECRET="your-auth-secret"
+   
+   # AI Suggestion Timeout Tuning
+   AI_SUGGESTION_TIMEOUT_MS=60000
+   NEXT_PUBLIC_AI_SUGGESTION_TIMEOUT_MS=65000
+   AI_SUGGESTION_NUM_PREDICT=120
+   ```
+   *Note: Use higher timeout values for AI (e.g., `90000`) if your local model is slow or cold-starting.*
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Database Setup:**
+   Generate the Prisma client and push the schema to your database.
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
 
-## Deploy on Vercel
+5. **Start the Development Server:**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) with your browser to see the IDE in action.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🧠 AI Configuration
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The IDE connects to your local Ollama server to fetch inline code completions. Ensure Ollama is running and accessible (usually on `http://127.0.0.1:11434`). You can optimize the prompt behavior and completion settings in `app/api/code-suggestion/route.ts`.
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome! Feel free to check the issues page or submit a pull request.
+
+## 📄 License
+
+This project is licensed under the MIT License.
